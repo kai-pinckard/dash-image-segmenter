@@ -30,7 +30,7 @@ This project encapsulates the see-segment tool into Docker containers which allo
 `pip install -r requirements.txt`
 
 ## How to Run Image Segmenter Finder Locally:
-Make sure that your working directory is the server folder inside the dash-image-segmenter. Then run:
+Make sure that your working directory is the server folder inside the dash-image-segmenter folder. Then run:
 
 `python app.py`
 
