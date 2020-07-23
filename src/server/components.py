@@ -140,6 +140,33 @@ def image_upload():
         )
     )
 
+def dataset_upload():
+    return html.Div(
+    [
+        html.H2("Upload"),
+        dcc.Upload(
+            id="upload-data",
+            children=html.Div(
+                ["Drag and drop or click to select a file to upload."]
+            ),
+            style={
+                "width": "100%",
+                "height": "60px",
+                "lineHeight": "60px",
+                "borderWidth": "1px",
+                "borderStyle": "dashed",
+                "borderRadius": "5px",
+                "textAlign": "center",
+                "margin": "10px",
+            },
+            multiple=True,
+        ),
+        html.H2("File List"),
+        html.Ul(id="file-list"),
+    ],
+    style={"max-width": "500px"},
+)
+
 # This does not render anything but is necessary for routing to function
 def url_bar():
     return dcc.Location(id='url', refresh=False)
@@ -154,6 +181,8 @@ def header():
         id="header",
     )
 
-
+"""
+Add the manual segmentation code here.
+"""
 def manual_segmentation_page():
     pass
