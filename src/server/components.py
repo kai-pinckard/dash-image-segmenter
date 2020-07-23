@@ -180,12 +180,15 @@ def image_display_column(image_source, image_label, alt_text, image_id=""):
                         src=image_source,
                         alt=alt_text,
                         id=image_id,
+                        # TODO Find a better way of controlling the image height.
+                        style={'height':'300px'},
+                        className="image-fluid",
                     ),
                 ],
             className="card border rounded border-success",
             ),
         ],
-        className="col-sm-3 col-lg-3 col-md-3 m-4 text-center",
+        className="col-sm-3 col-lg-3 col-md-3 m-4 text-center h-25",
     )
 
 def see_segment():
@@ -198,18 +201,13 @@ def see_segment():
         children=[
             html.Div(
                 children=[
-                    html.Div(
-                        children=[
-                            html.Div(className="col"),
+                    html.Div(className="col-1"),
 
-                            image_display_column("/uploads/Chameleon.jpg", "RGB Image", "Image not found", "rgb_image"),
-                            image_display_column("/uploads/mask.jpg", "Current Best", "Image not found", "mask_image"),
-                            image_display_column("/uploads/label.jpg", "Ground Truth", "Image not found", "label_image"),
-                        
-                            html.Div(className="col"),
-                        ],
-                        className="",
-                    ),
+                    image_display_column("/static/Chameleon.jpg", "RGB Image", "Image not found", "rgb_image"),
+                    image_display_column("/static/mask.jpg", "Current Best", "Image not found", "mask_image"),
+                    image_display_column("/static/Chameleon_GT.png", "Ground Truth", "Image not found", "label_image"),
+                
+                    html.Div(className="col-1"),
                 ],
                 className="row mt-5",
                 id="image-sidebyside"

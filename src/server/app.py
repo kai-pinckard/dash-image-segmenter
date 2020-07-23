@@ -8,7 +8,7 @@ import pandas as pd
 from components import *
 import os
 import base64
-from flask import Flask
+from flask import Flask, send_from_directory
 
 
 UPLOAD_DIRECTORY = os.path.join(os.getcwd(), "uploads")
@@ -60,7 +60,6 @@ app.layout = html.Div(
 )
 def update_output(uploaded_filenames, uploaded_file_contents):
     """Save uploaded files and regenerate the file list."""
-    print("rean")
     if uploaded_filenames is not None and uploaded_file_contents is not None:
         for name, data in zip(uploaded_filenames, uploaded_file_contents):
             save_file(name, data)
@@ -80,9 +79,15 @@ def save_file(name, content):
 
 
 @server.route("/download/<path:path>")
-def download(path):
+def download(file_name):
     """Serve a file from the upload directory."""
-    return send_from_directory(UPLOAD_DIRECTORY, path, as_attachment=True)
+    return send_from_directory(UPLOAD_DIRECTORY, file_name, as_attachment=True)
+
+# This function may be insecure
+@server.route("/static/<image_name>")
+def serve_image(image_name):
+    print(image_name)
+    return send_from_directory(UPLOAD_DIRECTORY, image_name)
 
 def file_download_link(filename):
     """Create a Plotly Dash 'A' element that downloads a file from the app."""
