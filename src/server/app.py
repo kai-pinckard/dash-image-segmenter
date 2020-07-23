@@ -116,6 +116,8 @@ def update_page(pathname):
         return dataset_upload()
     elif pathname == "/segment":
         return manual_segmentation_page()
+    elif pathname == "/seesegment":
+        return see_segment()
     return html.Div([
         html.Div("Invalid url"),
         html.H3('You are on page {}'.format(pathname))

@@ -167,6 +167,65 @@ def dataset_upload():
     style={"max-width": "500px"},
 )
 
+def image_display_column(image_source, image_label, alt_text, image_id=""):
+    """
+    This is a reusable component for displaying an image with a label.
+    """
+    return html.Div(
+        children=[
+            html.H2(image_label),
+            html.Div(
+                children=[
+                    html.Img(
+                        src=image_source,
+                        alt=alt_text,
+                        id=image_id,
+                    ),
+                ],
+            className="card border rounded border-success",
+            ),
+        ],
+        className="col-sm-3 col-lg-3 col-md-3 m-4 text-center",
+    )
+
+def see_segment():
+    """
+    This page displays the current segmentation progress of an image
+    using the seesegment workers. This page is intended primarily as a development tool
+    and does not support any manual segmentation.
+    """
+    return html.Div(
+        children=[
+            html.Div(
+                children=[
+                    html.Div(
+                        children=[
+                            html.Div(className="col"),
+
+                            image_display_column("/uploads/Chameleon.jpg", "RGB Image", "Image not found", "rgb_image"),
+                            image_display_column("/uploads/mask.jpg", "Current Best", "Image not found", "mask_image"),
+                            image_display_column("/uploads/label.jpg", "Ground Truth", "Image not found", "label_image"),
+                        
+                            html.Div(className="col"),
+                        ],
+                        className="",
+                    ),
+                ],
+                className="row mt-5",
+                id="image-sidebyside"
+            )
+        ],
+        id="see-segment-content"
+    )
+
+
+def verify_images():
+    """
+    This page allows the user to view the images that they have uploaded
+    and eventually will allow them to select which images to use when multiple images have been uploaded.
+    """
+    pass
+
 # This does not render anything but is necessary for routing to function
 def url_bar():
     return dcc.Location(id='url', refresh=False)
