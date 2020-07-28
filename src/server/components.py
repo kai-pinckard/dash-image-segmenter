@@ -211,6 +211,19 @@ def see_segment():
                 ],
                 className="row mt-5",
                 id="image-sidebyside"
+            ),
+            html.Div(
+                children=[
+                    html.Div(className="col"),
+                    html.Div(children=[
+                        html.Button("Begin Segmentation",
+                            className="btn btn-success",
+                            id="segmentation-button")
+                    ],
+                    className="col text-center"),
+                    html.Div(className="col")
+                ],
+                className="row mt-5"
             )
         ],
         id="see-segment-content"

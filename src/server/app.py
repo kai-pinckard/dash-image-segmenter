@@ -9,7 +9,59 @@ from components import *
 import os
 import base64
 from flask import Flask, send_from_directory
+import imageio
 
+
+import tasks
+
+"""
+This is a list storing all the promises from the work queue
+"""
+results = []
+
+"""
+cctools work queue
+"""
+#import work_queue as wq
+
+# create a new queue listening on port 9123
+#q = wq.WorkQueue(9123)
+"""
+See segment dependencies these can be removed if all segmentation
+is performed in other processes. Note that the see module must be added to
+the python path manually. One good way to do this is described here:
+https://medium.com/@arnaud.bertrand/modifying-python-s-search-path-with-pth-files-2a41a4143574
+
+When see segment has been packaged and can be pip installed this will no longer be necessary.
+"""
+#from see import GeneticSearch, Segmentors
+"""
+Install instructions conda
+
+conda create
+conda activates envs
+conda install -c conda-forge dash-renderer
+conda install -c conda-forge dash 
+conda install pandas
+conda install -y -c conda-forge ndcctools
+
+
+Find an up to date version here:
+http://ccl.cse.nd.edu/software/download
+Download here:
+http://ccl.cse.nd.edu/software/files/cctools-7.1.6-source.tar.gz
+
+Command line Download:
+wget -O cctools-7.1.6-source.tar.gz http://ccl.cse.nd.edu/software/files/cctools-7.1.6-source.tar.gz
+
+Install from source ndcctools
+tar zxf cctools-*-source.tar.gz
+cd cctools-*-source
+./configure
+make
+# by default, CCTools is installed at ~/cctools. See below to change this default.
+make install
+"""
 
 UPLOAD_DIRECTORY = os.path.join(os.getcwd(), "uploads")
 
@@ -52,6 +104,52 @@ app.layout = html.Div(
     ],
     className="container-fluid",
     )
+
+"""
+Note: header is not really updated it's just that dash requires
+every callback to have an output
+"""
+@app.callback(
+    Output("header", "n_clicks"),
+    [Input('segmentation-button', 'n_clicks')]
+)
+def start_segmentation(num_clicks):
+    print(num_clicks)
+    if num_clicks == None:
+        return 0
+    else:
+        #return tasks.simple_test_task.delay(2,34)
+        print("called")
+        images = uploaded_files()
+        img = images[0]
+        gmask = images[1]
+        
+        print(img)
+        print(gmask)
+        img = imageio.imread(os.path.join(UPLOAD_DIRECTORY, img))
+        gmask = imageio.imread(os.path.join(UPLOAD_DIRECTORY, gmask))
+        #img = get_image_encoding(img)
+        print(img)
+        #gmask = get_image_encoding(gmask)
+        print("here")
+        result = tasks.segment.delay(img, gmask, 5, 10)
+        print("here2")
+        results.append(result)
+        print("here3")
+        print(results[0].get())
+        return 0
+
+
+"""
+
+"""
+def get_image_encoding(image_path):
+    with open(os.path.join(UPLOAD_DIRECTORY, image_path), "rb") as imageFile:
+        encoded_img = base64.b64encode(imageFile.read())
+        json_serializable_img = encoded_img.decode("utf-8")
+    return json_serializable_img
+
+     
                 
 
 @app.callback(
@@ -86,7 +184,6 @@ def download(file_name):
 # This function may be insecure
 @server.route("/static/<image_name>")
 def serve_image(image_name):
-    print(image_name)
     return send_from_directory(UPLOAD_DIRECTORY, image_name)
 
 def file_download_link(filename):
