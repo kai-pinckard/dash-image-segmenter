@@ -5,58 +5,61 @@ import dash_html_components as html
 """
 This is the navbar that displays at the top of every page.
 """
+
+
 def nav_bar():
     return (
         html.Nav(
-        children=[
-            html.A(
-                "See Segment",
-                className="navbar-brand",
-                href="#",
-            ),
-        html.Div(
             children=[
-                html.Ul(
+                html.A(
+                    "See Segment",
+                    className="navbar-brand",
+                    href="#",
+                ),
+                html.Div(
                     children=[
-                        html.Li(
+                        html.Ul(
                             children=[
-                                html.A("Upload Files",
-                                className="nav-link",
-                                href="index",
+                                html.Li(
+                                    children=[
+                                        html.A("Upload Files",
+                                               className="nav-link",
+                                               href="index",
+                                               )
+                                    ],
+                                    className="nav-item",
+                                ),
+                                html.Li(
+                                    children=[
+                                        html.A("Results",
+                                               className="nav-link",
+                                               href="monitor",
+                                               )
+                                    ],
+                                    className="nav-item",
                                 )
                             ],
-                            className="nav-item",
-                        ),
-                        html.Li(
-                            children=[
-                                html.A("Results",
-                                className="nav-link",
-                                href="monitor",
-                                )
-                            ],
-                            className="nav-item",
+                            className="navbar-nav ml-auto"
                         )
                     ],
-                    className="navbar-nav ml-auto"
+                    className="collapse navbar-collapse",
                 )
             ],
-            className="collapse navbar-collapse",
-        )
-        ],
-        className="navbar navbar-expand-lg navbar-dark bg-primary"
+            className="navbar navbar-expand-lg navbar-dark bg-primary"
         )
     )
 
+
 def image_upload():
     upload_component_style = {
-                        'width': '100%',
-                        'height': '60px',
-                        'lineHeight': '60px',
-                        'borderWidth': '1px',
-                        'borderStyle': 'dashed',
-                        'borderRadius': '5px',
+        'width': '100%',
+        'height': '60px',
+        'lineHeight': '60px',
+        'borderWidth': '1px',
+        'borderStyle': 'dashed',
+        'borderRadius': '5px',
                         'textAlign': 'center',
-                        }
+    }
 
     return (
         html.Div(
@@ -81,7 +84,8 @@ def image_upload():
                                                         ),
                                                         dcc.Upload(
                                                             children=[
-                                                                html.A("Select a file.")
+                                                                html.A(
+                                                                    "Select a file.")
                                                             ],
                                                             style=upload_component_style,
                                                             className="form-control-file",
@@ -98,7 +102,8 @@ def image_upload():
                                                         ),
                                                         dcc.Upload(
                                                             children=[
-                                                                html.A("Select a file.")
+                                                                html.A(
+                                                                    "Select a file.")
                                                             ],
                                                             style=upload_component_style,
                                                             className="form-control-file",
@@ -135,37 +140,39 @@ def image_upload():
                     children="",
                     className="col",
                 ),
-        ],
-        className="row mt-5"
+            ],
+            className="row mt-5"
         )
     )
 
+
 def dataset_upload():
     return html.Div(
-    [
-        html.H2("Upload"),
-        dcc.Upload(
-            id="upload-data",
-            children=html.Div(
-                ["Drag and drop or click to select a file to upload."]
+        [
+            html.H2("Upload"),
+            dcc.Upload(
+                id="upload-data",
+                children=html.Div(
+                    ["Drag and drop or click to select a file to upload."]
+                ),
+                style={
+                    "width": "100%",
+                    "height": "60px",
+                    "lineHeight": "60px",
+                    "borderWidth": "1px",
+                    "borderStyle": "dashed",
+                    "borderRadius": "5px",
+                    "textAlign": "center",
+                    "margin": "10px",
+                },
+                multiple=True,
             ),
-            style={
-                "width": "100%",
-                "height": "60px",
-                "lineHeight": "60px",
-                "borderWidth": "1px",
-                "borderStyle": "dashed",
-                "borderRadius": "5px",
-                "textAlign": "center",
-                "margin": "10px",
-            },
-            multiple=True,
-        ),
-        html.H2("File List"),
-        html.Ul(id="file-list"),
-    ],
-    style={"max-width": "500px"},
-)
+            html.H2("File List"),
+            html.Ul(id="file-list"),
+        ],
+        style={"max-width": "500px"},
+    )
+
 
 def image_display_column(image_source, image_label, alt_text, image_id=""):
     """
@@ -181,15 +188,16 @@ def image_display_column(image_source, image_label, alt_text, image_id=""):
                         alt=alt_text,
                         id=image_id,
                         # TODO Find a better way of controlling the image height.
-                        style={'height':'300px'},
+                        style={'height': '300px'},
                         className="image-fluid",
                     ),
                 ],
-            className="card border rounded border-success",
+                className="card border rounded border-success",
             ),
         ],
         className="col-sm-3 col-lg-3 col-md-3 m-4 text-center h-25",
     )
+
 
 def see_segment(segmentation_code, fitness, segmentation_parameters):
     """
@@ -203,10 +211,13 @@ def see_segment(segmentation_code, fitness, segmentation_parameters):
                 children=[
                     html.Div(className="col-1"),
 
-                    image_display_column("/static/Chameleon.jpg", "RGB Image", "Image not found", "rgb_image"),
-                    image_display_column("/static/mask.jpg", "Current Best", "Image not found", "mask_image"),
-                    image_display_column("/static/Chameleon_GT.png", "Ground Truth", "Image not found", "label_image"),
-                
+                    image_display_column(
+                        "/static/Chameleon.jpg", "RGB Image", "Image not found", "rgb_image"),
+                    image_display_column(
+                        "/static/mask.jpg", "Current Best", "Image not found", "mask_image"),
+                    image_display_column(
+                        "/static/Chameleon_GT.png", "Ground Truth", "Image not found", "label_image"),
+
                     html.Div(className="col-1"),
                 ],
                 className="row mt-5",
@@ -217,22 +228,23 @@ def see_segment(segmentation_code, fitness, segmentation_parameters):
                     html.Div(className="col"),
                     html.Div(children=[
                         html.Button("Begin Segmentation",
-                            className="btn btn-success",
-                            id="segmentation-button")
+                                    className="btn btn-success",
+                                    id="segmentation-button")
                     ],
-                    className="col text-center"),
+                        className="col text-center"),
                     html.Div(className="col")
                 ],
                 className="row mt-2"
             ),
-            display_segmentation_code(segmentation_code, fitness, segmentation_parameters)
+            display_segmentation_code(
+                segmentation_code, fitness, segmentation_parameters)
         ],
         id="see-segment-content"
     )
 
+
 def empty_col():
     return html.Div(className="col")
-
 
 
 def display_segmentation_code(segmentation_code="Please wait.", fitness=1.0, segmentation_parameters="Please wait."):
@@ -260,12 +272,12 @@ def display_segmentation_code(segmentation_code="Please wait.", fitness=1.0, seg
                         ],
                         className="card border rounded",
                     )
-            ],
-            className="col-sm-8 col-md-6 col-lg-4",
+                ],
+                className="col-sm-8 col-md-6 col-lg-4",
             ),
             html.Div(
                 children=[
-                    html.H2("Fitness: " + str(formatted_fitness(fitness)) ),
+                    html.H2("Fitness: " + str(formatted_fitness(fitness))),
                     html.Div(
                         children=[
                             html.Div(
@@ -273,8 +285,9 @@ def display_segmentation_code(segmentation_code="Please wait.", fitness=1.0, seg
                                     html.Div(
                                         className="progress-bar bg-success",
                                         role="progressbar",
-                                        style=("width: "+str(fitness_to_progress(fitness))),
-                                        ),
+                                        style={
+                                            "width": str(fitness_to_progress(fitness))+"%"},
+                                    ),
                                 ],
                                 className="progress",
                             )
@@ -282,22 +295,21 @@ def display_segmentation_code(segmentation_code="Please wait.", fitness=1.0, seg
                         className="card border rounded",
                     ),
                     html.H2("Parameters:",
-                    className="mt-4"
-                    ),
+                            className="mt-4"
+                            ),
                     html.Div(
-                    children=[
-                        html.P(segmentation_parameters)
-                    ],
-                    className="card border rounded",
-                )
-            ],
-            className="col-sm-8 col-md-6 col-lg-4",
+                        children=[
+                            html.P(segmentation_parameters)
+                        ],
+                        className="card border rounded",
+                    )
+                ],
+                className="col-sm-8 col-md-6 col-lg-4",
             ),
             empty_col(),
         ],
         className="row mt-5"
     )
-
 
 
 def verify_images():
@@ -308,6 +320,8 @@ def verify_images():
     pass
 
 # This does not render anything but is necessary for routing to function
+
+
 def url_bar():
     return dcc.Location(id='url', refresh=False)
 
@@ -321,8 +335,11 @@ def header():
         id="header",
     )
 
+
 """
 Add the manual segmentation code here.
 """
+
+
 def manual_segmentation_page():
     pass
