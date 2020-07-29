@@ -115,7 +115,7 @@ def image_upload():
                                                             className="btn btn-primary"
                                                         ),
                                                     ],
-                                                    className="form-group m-3",
+                                                    className="form-group m-",
 
                                                 )
                                             ],
@@ -191,7 +191,7 @@ def image_display_column(image_source, image_label, alt_text, image_id=""):
         className="col-sm-3 col-lg-3 col-md-3 m-4 text-center h-25",
     )
 
-def see_segment():
+def see_segment(segmentation_code, fitness, segmentation_parameters):
     """
     This page displays the current segmentation progress of an image
     using the seesegment workers. This page is intended primarily as a development tool
@@ -223,11 +223,81 @@ def see_segment():
                     className="col text-center"),
                     html.Div(className="col")
                 ],
-                className="row mt-5"
-            )
+                className="row mt-2"
+            ),
+            display_segmentation_code(segmentation_code, fitness, segmentation_parameters)
         ],
         id="see-segment-content"
     )
+
+def empty_col():
+    return html.Div(className="col")
+
+
+
+def display_segmentation_code(segmentation_code="Please wait.", fitness=1.0, segmentation_parameters="Please wait."):
+
+    def formatted_fitness(fitness):
+        return float("{0:.2f}".format(fitness))
+
+    def fitness_to_progress(fitness):
+        # Calculate progress bar precentage
+        return (1 - fitness) * 100
+
+    return html.Div(
+        children=[
+            empty_col(),
+            html.Div(
+                children=[
+                    html.H2("Segmentation Code:"),
+                    html.Div(
+                        children=[
+                            html.Pre(
+                                children=[
+                                    html.Code(segmentation_code)
+                                ]
+                            )
+                        ],
+                        className="card border rounded",
+                    )
+            ],
+            className="col-sm-8 col-md-6 col-lg-4",
+            ),
+            html.Div(
+                children=[
+                    html.H2("Fitness: " + str(formatted_fitness(fitness)) ),
+                    html.Div(
+                        children=[
+                            html.Div(
+                                children=[
+                                    html.Div(
+                                        className="progress-bar bg-success",
+                                        role="progressbar",
+                                        style=("width: "+str(fitness_to_progress(fitness))),
+                                        ),
+                                ],
+                                className="progress",
+                            )
+                        ],
+                        className="card border rounded",
+                    ),
+                    html.H2("Parameters:",
+                    className="mt-4"
+                    ),
+                    html.Div(
+                    children=[
+                        html.P(segmentation_parameters)
+                    ],
+                    className="card border rounded",
+                )
+            ],
+            className="col-sm-8 col-md-6 col-lg-4",
+            ),
+            empty_col(),
+        ],
+        className="row mt-5"
+    )
+
 
 
 def verify_images():

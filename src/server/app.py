@@ -2,7 +2,7 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 from urllib.parse import quote as urlquote
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import plotly.express as px
 import pandas as pd
 from components import *
@@ -105,39 +105,49 @@ app.layout = html.Div(
     className="container-fluid",
     )
 
+
+def submit_segmentation_task(image, label):
+    """
+    Given an image and a label which can either both be filenames of
+    images inside the UPLOAD_DIRECTORY or both can be imageio objects
+    this function will add a celery task to run seesegment on the image and the
+    label
+    """
+    if isinstance(image, str) and isinstance(label):
+        img = imageio.imread(os.path.join(UPLOAD_DIRECTORY, image))
+        gmask = imageio.imread(os.path.join(UPLOAD_DIRECTORY, label))
+    # Here the assumption is that the images are imageio objects.
+    result = tasks.segment.delay(img, gmask, 5, 10)
+    results.append(result)
+
+
 """
 Note: header is not really updated it's just that dash requires
 every callback to have an output
 """
 @app.callback(
-    Output("header", "n_clicks"),
-    [Input('segmentation-button', 'n_clicks')]
+    Output("see-segment-content", "children"),
+    [Input('segmentation-button', 'n_clicks')],
+    [State("see-segment-content", "children")]
 )
-def start_segmentation(num_clicks):
+def start_segmentation(num_clicks, children):
     print(num_clicks)
     if num_clicks == None:
-        return 0
+        return children
     else:
-        #return tasks.simple_test_task.delay(2,34)
-        print("called")
-        images = uploaded_files()
+        """ images = uploaded_files()
         img = images[0]
         gmask = images[1]
-        
-        print(img)
-        print(gmask)
-        img = imageio.imread(os.path.join(UPLOAD_DIRECTORY, img))
-        gmask = imageio.imread(os.path.join(UPLOAD_DIRECTORY, gmask))
-        #img = get_image_encoding(img)
-        print(img)
-        #gmask = get_image_encoding(gmask)
-        print("here")
-        result = tasks.segment.delay(img, gmask, 5, 10)
-        print("here2")
-        results.append(result)
-        print("here3")
-        print(results[0].get())
-        return 0
+        submit_segmentation_task(img, gmask)
+
+        return 0 """
+
+        params = "test params"
+        code = "test code"
+        fitness = 0.45
+
+        return see_segment(code, fitness, params)
+
 
 
 """
@@ -219,7 +229,7 @@ def update_page(pathname):
     elif pathname == "/segment":
         return manual_segmentation_page()
     elif pathname == "/seesegment":
-        return see_segment()
+        return see_segment("code", 0.5, "test parsmas")
     return html.Div([
         html.Div("Invalid url"),
         html.H3('You are on page {}'.format(pathname))
