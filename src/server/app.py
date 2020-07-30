@@ -8,10 +8,9 @@ import pandas as pd
 from components import *
 import os
 import base64
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory, request, abort
 import imageio
 from see import Segmentors, GeneticSearch
-
 
 import tasks
 
@@ -21,47 +20,12 @@ This is a list storing all the promises from the work queue
 results = []
 
 """
-cctools work queue
-"""
-#import work_queue as wq
-
-# create a new queue listening on port 9123
-#q = wq.WorkQueue(9123)
-"""
 See segment dependencies these can be removed if all segmentation
 is performed in other processes. Note that the see module must be added to
 the python path manually. One good way to do this is described here:
 https://medium.com/@arnaud.bertrand/modifying-python-s-search-path-with-pth-files-2a41a4143574
 
 When see segment has been packaged and can be pip installed this will no longer be necessary.
-"""
-#from see import GeneticSearch, Segmentors
-"""
-Install instructions conda
-
-conda create
-conda activates envs
-conda install -c conda-forge dash-renderer
-conda install -c conda-forge dash 
-conda install pandas
-conda install -y -c conda-forge ndcctools
-
-
-Find an up to date version here:
-http://ccl.cse.nd.edu/software/download
-Download here:
-http://ccl.cse.nd.edu/software/files/cctools-7.1.6-source.tar.gz
-
-Command line Download:
-wget -O cctools-7.1.6-source.tar.gz http://ccl.cse.nd.edu/software/files/cctools-7.1.6-source.tar.gz
-
-Install from source ndcctools
-tar zxf cctools-*-source.tar.gz
-cd cctools-*-source
-./configure
-make
-# by default, CCTools is installed at ~/cctools. See below to change this default.
-make install
 """
 
 UPLOAD_DIRECTORY = os.path.join(os.getcwd(), "uploads")
@@ -116,14 +80,16 @@ def periodic_update(n_intevals, source):
     if len(results) > 0:
         images = uploaded_files()
         img = images[0]
+        #image = imageio.imread(os.path.join(UPLOAD_DIRECTORY, img))
         print("testing")
         print("test", results[0].state)
         if results[0].ready():
             print("ren")
-            segmenter = Segmentors.algoFromParams(results[0]["params"])
+            segmenter = Segmentors.algoFromParams((results[0].get())["params"])
             mask_image = tasks.evaluate_segmentation.delay(segmenter, img).get()
             imageio.imwrite("mask.png", mask_image)
-            return "mask.png"
+            print("image written")
+            return source
         print("not ready")
         print(results[0].ready())
     return source
@@ -137,11 +103,10 @@ def submit_segmentation_task(image, label):
     this function will add a celery task to run seesegment on the image and the
     label
     """
-    if isinstance(image, str) and isinstance(label, str):
+    """ if isinstance(image, str) and isinstance(label, str):
         img = imageio.imread(os.path.join(UPLOAD_DIRECTORY, image))
-        gmask = imageio.imread(os.path.join(UPLOAD_DIRECTORY, label))
-    # Here the assumption is that the images are imageio objects.
-    result = tasks.conduct_genetic_search.delay(img, gmask, 2, 5)
+        gmask = imageio.imread(os.path.join(UPLOAD_DIRECTORY, label)) """
+    result = tasks.conduct_genetic_search.delay(image, label, 1, 2)
     results.append(result)
 
 
@@ -162,25 +127,30 @@ def start_segmentation(num_clicks, children):
         images = uploaded_files()
         img = images[0]
         gmask = images[1]
+        print("img", img, "gmask", gmask)
         submit_segmentation_task(img, gmask)
 
         return children
 
-
-"""
-Use dash interval.
-"""
-"""
-
-"""
 def get_image_encoding(image_path):
-    with open(os.path.join(UPLOAD_DIRECTORY, image_path), "rb") as imageFile:
-        encoded_img = base64.b64encode(imageFile.read())
+    with open(os.path.join(UPLOAD_DIRECTORY, image_path), "rb") as image_file:
+        encoded_img = base64.b64encode(image_file.read())
         json_serializable_img = encoded_img.decode("utf-8")
     return json_serializable_img
 
-     
-                
+@server.route("/files/<filename>", methods=["POST"])
+def post_file(filename):
+    """Upload a file."""
+
+    if "/" in filename:
+        # Return 400 BAD REQUEST
+        abort(400, "no subdirectories directories allowed")
+
+    with open(os.path.join(UPLOAD_DIRECTORY, filename), "wb") as fp:
+        fp.write(request.data)
+
+    # Return 201 CREATED
+    return "", 201
 
 @app.callback(
     Output("file-list", "children"),
@@ -207,9 +177,9 @@ def save_file(name, content):
 
 
 @server.route("/download/<path:path>")
-def download(file_name):
+def download(path):
     """Serve a file from the upload directory."""
-    return send_from_directory(UPLOAD_DIRECTORY, file_name, as_attachment=True)
+    return send_from_directory(UPLOAD_DIRECTORY, path, as_attachment=True)
 
 # This function may be insecure
 @server.route("/static/<image_name>")

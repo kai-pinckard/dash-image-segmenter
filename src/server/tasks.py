@@ -2,19 +2,22 @@ from celery import Celery
 from see import GeneticSearch, Segmentors
 import base64
 import imageio
-
+import requests
 
 """To Run a worker: celery -A tasks worker --loglevel=info """
 
 from celery.utils.log import get_task_logger
+
+
+DASH_URL = "http://127.0.0.1:8888"
 
 logger = get_task_logger(__name__)
 
 client = Celery('tasks', backend='rpc://', broker='amqp://guest@localhost//')
 
 client.conf.task_serializer = 'pickle'
-client.conf.result_serializer = 'pickle'
-client.conf.accept_content = ['pickle']
+client.conf.result_serializer = 'json'
+client.conf.accept_content = ['pickle', 'json']
 
 def store_encoded_image(encoded_image, file_name):
     with open(file_name, "wb") as imageFile:
@@ -25,12 +28,24 @@ def store_and_load_encoded_image(encoded_image, file_name):
     python_image_object = imageio.imread(file_name)
     return python_image_object
 
+def download_and_store_image(image_name):
+    response = requests.get(DASH_URL + "/download/" + image_name)
+    with open(image_name, "wb") as image_file:
+        image_file.write(response.content)
+
+def upload_file_to_dash(file_name):
+    url = DASH_URL + "/files/" + file_name
+    files = {'media': open(file_name, 'rb')}
+    requests.post(url, files=files)
 
 @client.task
 def evaluate_segmentation(segmenter, image):
+    download_and_store_image(image)
+    image = imageio.imread(image)
     mask = segmenter.evaluate(image)
-    return mask
-
+    imageio.imwrite("mask.png", mask)
+    upload_file_to_dash("mask.png")
+    return "mask.png"
 
 @client.task
 def conduct_genetic_search(img, gmask, num_gen, pop_size):
@@ -46,6 +61,14 @@ def conduct_genetic_search(img, gmask, num_gen, pop_size):
     #img = store_and_load_encoded_image(img, "rgb.png")
     #gmask = store_and_load_encoded_image(gmask, "label.png")
     # Create an evolver
+
+    print("ran") 
+    download_and_store_image(img)
+    download_and_store_image(gmask)
+
+    img = imageio.imread(img)
+    gmask = imageio.imread(gmask)
+
     my_evolver = GeneticSearch.Evolver(img, gmask, pop_size=pop_size)
     
     # Conduct the genetic search
@@ -72,7 +95,7 @@ def conduct_genetic_search(img, gmask, num_gen, pop_size):
         data = {}
         data["fitness"] = fitness
         data["params"] = params
-        data["segmenter"] = seg
+        #data["segmenter"] = seg
 
         return data
 
