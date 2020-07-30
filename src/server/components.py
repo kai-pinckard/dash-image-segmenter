@@ -6,7 +6,6 @@ import dash_html_components as html
 This is the navbar that displays at the top of every page.
 """
 
-
 def nav_bar():
     return (
         html.Nav(
@@ -331,6 +330,12 @@ def header():
         children=[
             url_bar(),
             nav_bar(),
+            # This allows periodic updates to the web page.
+            dcc.Interval(
+            id='interval-component',
+            interval=5*1000, # in milliseconds
+            n_intervals=0
+        )
         ],
         id="header",
     )

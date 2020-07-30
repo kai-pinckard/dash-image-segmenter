@@ -4,7 +4,7 @@ import base64
 import imageio
 
 
-""" celery -A tasks worker --loglevel=info """
+"""To Run a worker: celery -A tasks worker --loglevel=info """
 
 from celery.utils.log import get_task_logger
 
@@ -25,16 +25,24 @@ def store_and_load_encoded_image(encoded_image, file_name):
     python_image_object = imageio.imread(file_name)
     return python_image_object
 
-@client.task
-def segment(img, gmask, num_gen, pop_size):
 
+@client.task
+def evaluate_segmentation(segmenter, image):
+    mask = segmenter.evaluate(image)
+    return mask
+
+
+@client.task
+def conduct_genetic_search(img, gmask, num_gen, pop_size):
+    """
+    Note: this task could be sped up substantially by
+    rewriting it to send the evaluation and fitness function
+    function calls to other works as tasks.
+    """
     # Only needed on some images
     # Convert the RGB 3-channel image into a 1-channel image
     # gmask = (np.sum(gmask, axis=2) > 0)
 
-    
-    logger.info("ran")
-    print("heres")
     #img = store_and_load_encoded_image(img, "rgb.png")
     #gmask = store_and_load_encoded_image(gmask, "label.png")
     # Create an evolver
@@ -64,6 +72,7 @@ def segment(img, gmask, num_gen, pop_size):
         data = {}
         data["fitness"] = fitness
         data["params"] = params
+        data["segmenter"] = seg
 
         return data
 

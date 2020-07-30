@@ -10,6 +10,7 @@ import os
 import base64
 from flask import Flask, send_from_directory
 import imageio
+from see import Segmentors, GeneticSearch
 
 
 import tasks
@@ -106,6 +107,29 @@ app.layout = html.Div(
     )
 
 
+@app.callback(
+    Output("mask_image", "src"),
+    [Input("interval-component", "n_intervals")],
+    [State("mask_image", "src")]
+)
+def periodic_update(n_intevals, source):
+    if len(results) > 0:
+        images = uploaded_files()
+        img = images[0]
+        print("testing")
+        print("test", results[0].state)
+        if results[0].ready():
+            print("ren")
+            segmenter = Segmentors.algoFromParams(results[0]["params"])
+            mask_image = tasks.evaluate_segmentation.delay(segmenter, img).get()
+            imageio.imwrite("mask.png", mask_image)
+            return "mask.png"
+        print("not ready")
+        print(results[0].ready())
+    return source
+
+
+
 def submit_segmentation_task(image, label):
     """
     Given an image and a label which can either both be filenames of
@@ -113,11 +137,11 @@ def submit_segmentation_task(image, label):
     this function will add a celery task to run seesegment on the image and the
     label
     """
-    if isinstance(image, str) and isinstance(label):
+    if isinstance(image, str) and isinstance(label, str):
         img = imageio.imread(os.path.join(UPLOAD_DIRECTORY, image))
         gmask = imageio.imread(os.path.join(UPLOAD_DIRECTORY, label))
     # Here the assumption is that the images are imageio objects.
-    result = tasks.segment.delay(img, gmask, 5, 10)
+    result = tasks.conduct_genetic_search.delay(img, gmask, 2, 5)
     results.append(result)
 
 
@@ -135,21 +159,17 @@ def start_segmentation(num_clicks, children):
     if num_clicks == None:
         return children
     else:
-        """ images = uploaded_files()
+        images = uploaded_files()
         img = images[0]
         gmask = images[1]
         submit_segmentation_task(img, gmask)
 
-        return 0 """
-
-        params = "test params"
-        code = "test code"
-        fitness = 0.45
-
-        return see_segment(code, fitness, params)
+        return children
 
 
-
+"""
+Use dash interval.
+"""
 """
 
 """
