@@ -203,24 +203,25 @@ def see_segment(segmentation_code, fitness, segmentation_parameters):
     This page displays the current segmentation progress of an image
     using the seesegment workers. This page is intended primarily as a development tool
     and does not support any manual segmentation.
+
+    If the images are not updating to reflect changes in the code try clearing your browser cache.
     """
     return html.Div(
         children=[
             html.Div(
                 children=[
                     html.Div(className="col-1"),
-
                     image_display_column(
                         "/static/Chameleon.jpg", "RGB Image", "Image not found", "rgb_image"),
                     image_display_column(
                         "/static/mask.jpg", "Current Best", "Image not found", "mask_image"),
                     image_display_column(
-                        "/static/Chameleon_GT.png", "Ground Truth", "Image not found", "label_image"),
+                        "/static/Chameleon_GT.jpg", "Ground Truth", "Image not found", "label_image"),
 
                     html.Div(className="col-1"),
                 ],
                 className="row mt-5",
-                id="image-sidebyside"
+                id="image-sidebyside",
             ),
             html.Div(
                 children=[

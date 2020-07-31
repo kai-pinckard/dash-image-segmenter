@@ -9,7 +9,9 @@ from components import *
 import os
 import base64
 from flask import Flask, send_from_directory, request, abort
+
 import imageio
+from PIL import Image
 from see import Segmentors, GeneticSearch
 
 import tasks
@@ -79,19 +81,19 @@ app.layout = html.Div(
 def periodic_update(n_intevals, source):
     if len(results) > 0:
         images = uploaded_files()
-        img = images[0]
+        img = "Chameleon.jpg"
         #image = imageio.imread(os.path.join(UPLOAD_DIRECTORY, img))
         print("testing")
         print("test", results[0].state)
         if results[0].ready():
             print("ren")
             segmenter = Segmentors.algoFromParams((results[0].get())["params"])
-            mask_image = tasks.evaluate_segmentation.delay(segmenter, img).get()
-            imageio.imwrite("mask.png", mask_image)
-            print("image written")
+            mask_image_path = tasks.evaluate_segmentation.delay(segmenter, img).get()
+            print(mask_image_path, "written")
             return source
         print("not ready")
         print(results[0].ready())
+        return "/static/" + "mask.jpg"
     return source
 
 
@@ -109,7 +111,6 @@ def submit_segmentation_task(image, label):
     result = tasks.conduct_genetic_search.delay(image, label, 1, 2)
     results.append(result)
 
-
 """
 Note: header is not really updated it's just that dash requires
 every callback to have an output
@@ -120,16 +121,13 @@ every callback to have an output
     [State("see-segment-content", "children")]
 )
 def start_segmentation(num_clicks, children):
-    print(num_clicks)
     if num_clicks == None:
         return children
     else:
-        images = uploaded_files()
-        img = images[0]
-        gmask = images[1]
+        img = "Chameleon.jpg"
+        gmask = "Chameleon_GT.jpg"
         print("img", img, "gmask", gmask)
         submit_segmentation_task(img, gmask)
-
         return children
 
 def get_image_encoding(image_path):
@@ -146,8 +144,23 @@ def post_file(filename):
         # Return 400 BAD REQUEST
         abort(400, "no subdirectories directories allowed")
 
-    with open(os.path.join(UPLOAD_DIRECTORY, filename), "wb") as fp:
-        fp.write(request.data)
+    file_path = os.path.join(UPLOAD_DIRECTORY, filename)
+    data = request.files["image"].read()
+    with open(file_path, "wb") as fp:
+        fp.write(data)
+
+    image = Image.open(file_path)
+    os.remove(file_path)
+
+    # Convert png images into jpg images
+    if file_path.endswith(".png"):
+        rgb_image = image.convert("RGB")
+        file_path = file_path.replace("png", "jpg")
+        rgb_image.save(file_path)
+    else:
+        image.save(file_path)
+
+    print("posted image saved", file_path)
 
     # Return 201 CREATED
     return "", 201
@@ -160,7 +173,7 @@ def update_output(uploaded_filenames, uploaded_file_contents):
     """Save uploaded files and regenerate the file list."""
     if uploaded_filenames is not None and uploaded_file_contents is not None:
         for name, data in zip(uploaded_filenames, uploaded_file_contents):
-            save_file(name, data)
+            save_image(name, data)
 
     files = uploaded_files()
     if len(files) == 0:
@@ -168,23 +181,39 @@ def update_output(uploaded_filenames, uploaded_file_contents):
     else:
         return [html.Li(file_download_link(filename)) for filename in files]
 
-def save_file(name, content):
+def save_image(name, content):
     """Decode and store an uploaded file, writing to disk."""
     data = content.encode("utf8").split(b";base64,")[1]
-    with open(os.path.join(UPLOAD_DIRECTORY, name), "wb") as fp:
+    file_name = os.path.join(UPLOAD_DIRECTORY, name)
+    with open(file_name, "wb") as fp:
         fp.write(base64.decodebytes(data))
+
+    # Note writing the binary to a file and then reading it and resaving it
+    # is inefficient consider improving this.
+
+
+    image = Image.open(file_name)
+    os.remove(file_name)
+    # Convert png images into jpg images
+    if file_name.endswith(".png"):
+        rgb_image = image.convert("RGB")
+        file_name = file_name.replace("png", "jpg")
+        rgb_image.save(file_name)
+    else:
+        image.save(file_name)
+    
 
 
 
 @server.route("/download/<path:path>")
 def download(path):
     """Serve a file from the upload directory."""
-    return send_from_directory(UPLOAD_DIRECTORY, path, as_attachment=True)
+    return send_from_directory(UPLOAD_DIRECTORY, path, as_attachment=True, cache_timeout=0)
 
 # This function may be insecure
 @server.route("/static/<image_name>")
 def serve_image(image_name):
-    return send_from_directory(UPLOAD_DIRECTORY, image_name)
+    return send_from_directory(UPLOAD_DIRECTORY, image_name, cache_timeout=0)
 
 def file_download_link(filename):
     """Create a Plotly Dash 'A' element that downloads a file from the app."""
@@ -202,7 +231,6 @@ def uploaded_files():
     return files
 
 
-
 @app.callback(dash.dependencies.Output('main-content', 'children'),
               [dash.dependencies.Input('url', 'pathname')])
 def update_page(pathname):
@@ -213,7 +241,7 @@ def update_page(pathname):
     These contents will be placed inside of the div with the id of "main-content".
     """
     if pathname == "/":
-        return image_upload()
+        return dataset_upload()
     elif pathname == "/dataset":
         return dataset_upload()
     elif pathname == "/segment":
