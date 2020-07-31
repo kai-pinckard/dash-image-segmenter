@@ -10,7 +10,6 @@ import os
 
 from celery.utils.log import get_task_logger
 
-
 DASH_URL = "http://127.0.0.1:8888"
 WORKER_IMAGE_FOLDER = os.path.join(os.getcwd(), "worker_images")
 
@@ -49,16 +48,6 @@ def upload_file_to_dash(file_name):
     files = {'image': open(get_path(file_name), 'rb')}
     requests.post(url, files=files)
 
-def upload_image_to_dash(image, file_name):
-    """
-    Use this function if you have a image object and the
-    file name to upload.
-    """
-    url = DASH_URL + "/files/" + file_name
-    files = {'image': image}
-    requests.post(url, files=files)
-
-
 @client.task
 def evaluate_segmentation(segmenter, image):
     download_and_store_image(image)
@@ -72,10 +61,11 @@ def evaluate_segmentation(segmenter, image):
 @client.task
 def conduct_genetic_search(img, gmask, num_gen, pop_size):
     """
-    Note: this task could be sped up substantially by
+    Note: this task could be sped up by
     rewriting it to send the evaluation and fitness function
-    function calls to other works as tasks.
+    calls to other workers as tasks.
     """
+
     # Only needed on some images
     # Convert the RGB 3-channel image into a 1-channel image
     # gmask = (np.sum(gmask, axis=2) > 0)
@@ -83,7 +73,6 @@ def conduct_genetic_search(img, gmask, num_gen, pop_size):
     download_and_store_image(img)
     download_and_store_image(gmask)
 
-    print(get_path(img))
     img = imageio.imread(get_path(img))
     gmask = imageio.imread(get_path(gmask))
 
@@ -115,7 +104,3 @@ def conduct_genetic_search(img, gmask, num_gen, pop_size):
         data["params"] = params
 
         return data
-
-@client.task
-def simple_test_task(num1, num2):
-    return num1 + num2

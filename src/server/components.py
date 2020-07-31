@@ -2,11 +2,10 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 
-"""
-This is the navbar that displays at the top of every page.
-"""
-
 def nav_bar():
+    """
+    This is the navbar that displays at the top of every page.
+    """
     return (
         html.Nav(
             children=[
@@ -48,104 +47,38 @@ def nav_bar():
         )
     )
 
+def url_bar():
+    """
+    This does not render anything but is necessary for routing to function
+    """
+    return dcc.Location(id='url', refresh=False)
 
-def image_upload():
-    upload_component_style = {
-        'width': '100%',
-        'height': '60px',
-        'lineHeight': '60px',
-        'borderWidth': '1px',
-        'borderStyle': 'dashed',
-        'borderRadius': '5px',
-                        'textAlign': 'center',
-    }
-
-    return (
-        html.Div(
-            children=[
-                html.Div(
-                    children="",
-                    className="col",
-                ),
-                html.Div(
-                    children=[
-                        html.Div(
-                            children=[
-                                html.Div(
-                                    children=[
-                                        html.Form(
-                                            children=[
-                                                html.Div(
-                                                    children=[
-                                                        html.Label(
-                                                            children="Select an RGB image to learn segmentations on.",
-                                                            htmlFor="rgb_image",
-                                                        ),
-                                                        dcc.Upload(
-                                                            children=[
-                                                                html.A(
-                                                                    "Select a file.")
-                                                            ],
-                                                            style=upload_component_style,
-                                                            className="form-control-file",
-                                                            id="exampleFormControlFile1",
-                                                        )
-                                                    ],
-                                                    className="form-group m-3",
-                                                ),
-                                                html.Div(
-                                                    children=[
-                                                        html.Label(
-                                                            children="Select a ground truth segmentation label image to use.",
-                                                            htmlFor="label_image",
-                                                        ),
-                                                        dcc.Upload(
-                                                            children=[
-                                                                html.A(
-                                                                    "Select a file.")
-                                                            ],
-                                                            style=upload_component_style,
-                                                            className="form-control-file",
-                                                            id="exampleFormControlFile2",
-                                                        )
-                                                    ],
-                                                    className="form-group m-3",
-                                                ),
-                                                html.Div(
-                                                    children=[
-                                                        html.Button(
-                                                            children="Upload Images",
-                                                            type="submit",
-                                                            className="btn btn-primary"
-                                                        ),
-                                                    ],
-                                                    className="form-group m-",
-
-                                                )
-                                            ],
-                                            action="verify",
-                                            method="post",
-                                            encType="multipart/form-data",
-                                        )
-                                    ],
-                                    className="card border rounded border-success",
-                                )
-                            ],
-                        )
-                    ],
-                    className="col-sm-8 col-lg-4 col-md-6 m-5",
-                ),
-                html.Div(
-                    children="",
-                    className="col",
-                ),
-            ],
-            className="row mt-5"
+def header(update_interval_in_seconds=5):
+    """
+    This header should always and by default is always included in every
+    page.
+    """
+    return html.Div(
+        children=[
+            url_bar(),
+            nav_bar(),
+            dcc.Interval(
+            id='interval-component',
+            interval=update_interval_in_seconds*1000, # in milliseconds
+            n_intervals=0
         )
+        ],
+        id="header",
     )
 
+def empty_col():
+    """
+    Used to create empty columns to allow bootstrap to properly align other
+    columns.
+    """
+    return html.Div(className="col")
 
-def dataset_upload():
+def upload():
     return html.Div(
         [
             html.H2("Upload"),
@@ -172,7 +105,6 @@ def dataset_upload():
         style={"max-width": "500px"},
     )
 
-
 def image_display_column(image_source, image_label, alt_text, image_id=""):
     """
     This is a reusable component for displaying an image with a label.
@@ -197,14 +129,14 @@ def image_display_column(image_source, image_label, alt_text, image_id=""):
         className="col-sm-3 col-lg-3 col-md-3 m-4 text-center h-25",
     )
 
-
 def see_segment(segmentation_code, fitness, segmentation_parameters):
     """
     This page displays the current segmentation progress of an image
-    using the seesegment workers. This page is intended primarily as a development tool
+    using the see segment workers. This page is intended primarily as a development tool
     and does not support any manual segmentation.
 
-    If the images are not updating to reflect changes in the code try clearing your browser cache.
+    If the images are not updating to reflect changes in the code try refreshing
+    the page and/or clearing your browser cache.
     """
     return html.Div(
         children=[
@@ -241,11 +173,6 @@ def see_segment(segmentation_code, fitness, segmentation_parameters):
         ],
         id="see-segment-content"
     )
-
-
-def empty_col():
-    return html.Div(className="col")
-
 
 def display_segmentation_code(segmentation_code="Please wait.", fitness=1.0, segmentation_parameters="Please wait."):
 
@@ -311,41 +238,16 @@ def display_segmentation_code(segmentation_code="Please wait.", fitness=1.0, seg
         className="row mt-5"
     )
 
-
 def verify_images():
     """
     This page allows the user to view the images that they have uploaded
-    and eventually will allow them to select which images to use when multiple images have been uploaded.
+    and eventually will allow them to select which images to use
+    when multiple images have been uploaded.
     """
     pass
 
-# This does not render anything but is necessary for routing to function
-
-
-def url_bar():
-    return dcc.Location(id='url', refresh=False)
-
-
-def header():
-    return html.Div(
-        children=[
-            url_bar(),
-            nav_bar(),
-            # This allows periodic updates to the web page.
-            dcc.Interval(
-            id='interval-component',
-            interval=8*1000, # in milliseconds
-            n_intervals=0
-        )
-        ],
-        id="header",
-    )
-
-
-"""
-Add the manual segmentation code here.
-"""
-
-
 def manual_segmentation_page():
-    pass
+    """
+    Add the manual segmentation code here.
+    """
+    return "To Be Implemented."

@@ -50,8 +50,10 @@ external_stylesheets = [
     }
 ]
 
-# Normally, Dash creates its own Flask server internally. By creating our own,
-# we can create a route for downloading files directly:
+""" 
+Normally, Dash creates its own Flask server internally. By creating our own,
+we can create a routes for interacting with files directly.
+"""
 server = Flask(__name__)
 app = dash.Dash(server=server,
                 meta_tags=[
@@ -62,7 +64,7 @@ app = dash.Dash(server=server,
 
 app.layout = html.Div(
     children=[
-        header(),
+        header(update_interval_in_seconds=10),
         html.Div(
             id="main-content",
             children=[],
@@ -71,7 +73,6 @@ app.layout = html.Div(
     ],
     className="container-fluid",
     )
-
 
 @app.callback(
     Output("mask_image", "src"),
@@ -82,45 +83,29 @@ def periodic_update(n_intevals, source):
     if len(results) > 0:
         images = uploaded_files()
         img = "Chameleon.jpg"
-        #image = imageio.imread(os.path.join(UPLOAD_DIRECTORY, img))
-        print("testing")
-        print("test", results[0].state)
         if results[0].ready():
-            print("ren")
             segmenter = Segmentors.algoFromParams((results[0].get())["params"])
             mask_image_path = tasks.evaluate_segmentation.delay(segmenter, img).get()
-            print(mask_image_path, "written")
-            return source
-        print("not ready")
-        print(results[0].ready())
-        return "/static/" + "mask.jpg"
-    return source
-
-
+    return "/static/" + "mask.jpg"
 
 def submit_segmentation_task(image, label):
     """
-    Given an image and a label which can either both be filenames of
-    images inside the UPLOAD_DIRECTORY or both can be imageio objects
-    this function will add a celery task to run seesegment on the image and the
-    label
+    Given the filenames of the image and the label this 
+    function will add a conduct_genetic_search function call to the work queue
     """
-    """ if isinstance(image, str) and isinstance(label, str):
-        img = imageio.imread(os.path.join(UPLOAD_DIRECTORY, image))
-        gmask = imageio.imread(os.path.join(UPLOAD_DIRECTORY, label)) """
     result = tasks.conduct_genetic_search.delay(image, label, 1, 2)
     results.append(result)
 
-"""
-Note: header is not really updated it's just that dash requires
-every callback to have an output
-"""
 @app.callback(
     Output("see-segment-content", "children"),
     [Input('segmentation-button', 'n_clicks')],
     [State("see-segment-content", "children")]
 )
 def start_segmentation(num_clicks, children):
+    """
+    Note: By returning children nothing is actually being updated this just
+    allows a task to be run at on a button press
+    """
     if num_clicks == None:
         return children
     else:
@@ -130,15 +115,12 @@ def start_segmentation(num_clicks, children):
         submit_segmentation_task(img, gmask)
         return children
 
-def get_image_encoding(image_path):
-    with open(os.path.join(UPLOAD_DIRECTORY, image_path), "rb") as image_file:
-        encoded_img = base64.b64encode(image_file.read())
-        json_serializable_img = encoded_img.decode("utf-8")
-    return json_serializable_img
-
 @server.route("/files/<filename>", methods=["POST"])
-def post_file(filename):
-    """Upload a file."""
+def post_image(filename):
+    """
+    Upload an image with an http request. This is used by the worker to
+    send images back to the server.
+    """
 
     if "/" in filename:
         # Return 400 BAD REQUEST
@@ -182,7 +164,10 @@ def update_output(uploaded_filenames, uploaded_file_contents):
         return [html.Li(file_download_link(filename)) for filename in files]
 
 def save_image(name, content):
-    """Decode and store an uploaded file, writing to disk."""
+    """
+    Save images and convert images that are uploaded on the web page
+    all png images will be saved as jpg images.
+    """
     data = content.encode("utf8").split(b";base64,")[1]
     file_name = os.path.join(UPLOAD_DIRECTORY, name)
     with open(file_name, "wb") as fp:
@@ -191,9 +176,9 @@ def save_image(name, content):
     # Note writing the binary to a file and then reading it and resaving it
     # is inefficient consider improving this.
 
-
     image = Image.open(file_name)
     os.remove(file_name)
+
     # Convert png images into jpg images
     if file_name.endswith(".png"):
         rgb_image = image.convert("RGB")
@@ -202,27 +187,33 @@ def save_image(name, content):
     else:
         image.save(file_name)
     
-
-
-
 @server.route("/download/<path:path>")
 def download(path):
-    """Serve a file from the upload directory."""
+    """
+    Serve a file from the upload directory to enable downloads
+    """
     return send_from_directory(UPLOAD_DIRECTORY, path, as_attachment=True, cache_timeout=0)
 
-# This function may be insecure
 @server.route("/static/<image_name>")
 def serve_image(image_name):
+    """
+    This function serves images so that they can be displayed on pages
+    on the dash web app.
+    """
     return send_from_directory(UPLOAD_DIRECTORY, image_name, cache_timeout=0)
 
 def file_download_link(filename):
-    """Create a Plotly Dash 'A' element that downloads a file from the app."""
+    """
+    Create a Dash link element that downloads a file from the app
+    """
     location = "/download/{}".format(urlquote(filename))
     return html.A(filename, href=location)
 
 
 def uploaded_files():
-    """List the files in the upload directory."""
+    """
+    List the files stored in the upload directory
+    """
     files = []
     for filename in os.listdir(UPLOAD_DIRECTORY):
         path = os.path.join(UPLOAD_DIRECTORY, filename)
@@ -241,18 +232,17 @@ def update_page(pathname):
     These contents will be placed inside of the div with the id of "main-content".
     """
     if pathname == "/":
-        return dataset_upload()
-    elif pathname == "/dataset":
-        return dataset_upload()
+        return upload()
+    elif pathname == "/upload":
+        return upload()
     elif pathname == "/segment":
         return manual_segmentation_page()
     elif pathname == "/seesegment":
-        return see_segment("code", 0.5, "test parsmas")
+        return see_segment("code", 0.5, "test parameters")
     return html.Div([
         html.Div("Invalid url"),
         html.H3('You are on page {}'.format(pathname))
     ])
-
 
 if __name__ == '__main__':
     app.run_server(debug=True, port=8888)
