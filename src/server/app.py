@@ -17,9 +17,33 @@ from see import Segmentors, GeneticSearch
 import tasks
 
 """
+Suggested improvements:
+
+Add a web page/mechanism for selecting which of all the images that have been
+uploaded should be used in the segmentation process.
+
+Add a better way of managing promises from the work queue than the results list.
+
+Add a better way of managing individuals and their fitnesses. It would be nice to
+have an organized means of keeping track of all the best individuals rather than only
+the current best individual.
+
+Rewrite the task conduct genetic search to create subtasks where the subtasks 
+calculate the segmentations and the fitnesses. 
+
+Add multiimage fitness function and task.
+"""
+
+"""
 This is a list storing all the promises from the work queue
 """
 results = []
+
+"""
+These stores the current best fitness and individual.
+"""
+best_fit = -1
+best_ind = {}
 
 """
 See segment dependencies these can be removed if all segmentation
@@ -88,6 +112,17 @@ def periodic_update(n_intevals, source):
             mask_image_path = tasks.evaluate_segmentation.delay(segmenter, img).get()
     return "/static/" + "mask.jpg"
 
+@app.callback(
+    Output("best-segmentation-code", "children"),
+    [Input("interval-component", "n_intervals")]
+)
+def update_code_display():
+    return get_best_info()
+
+
+def get_best_segmentation_info():
+    return ""
+
 def submit_segmentation_task(image, label):
     """
     Given the filenames of the image and the label this 
@@ -151,7 +186,7 @@ def post_image(filename):
     Output("file-list", "children"),
     [Input("upload-data", "filename"), Input("upload-data", "contents")],
 )
-def update_output(uploaded_filenames, uploaded_file_contents):
+def update_file_list(uploaded_filenames, uploaded_file_contents):
     """Save uploaded files and regenerate the file list."""
     if uploaded_filenames is not None and uploaded_file_contents is not None:
         for name, data in zip(uploaded_filenames, uploaded_file_contents):
@@ -238,7 +273,7 @@ def update_page(pathname):
     elif pathname == "/segment":
         return manual_segmentation_page()
     elif pathname == "/seesegment":
-        return see_segment("Please wait for segmentation results.", 1.0, "Please wait for segmentation results.")
+        return see_segment("Start a segmentation job.", 1.0, "Start a segmentation job.")
     return html.Div([
         html.Div("Invalid url"),
         html.H3('You are on page {}'.format(pathname))

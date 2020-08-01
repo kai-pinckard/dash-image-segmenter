@@ -235,7 +235,12 @@ def display_segmentation_code(segmentation_code="Please wait.", fitness=1.0, seg
                         children=[
                             html.Pre(
                                 children=[
-                                    html.Code(segmentation_code)
+                                    html.Code(
+                                        children=[
+                                        segmentation_code
+                                        ],
+                                        id="best-segmentation-code"
+                                    )
                                 ]
                             )
                         ],
