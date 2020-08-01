@@ -79,6 +79,28 @@ def empty_col():
     return html.Div(className="col")
 
 def upload():
+    """
+    Wraps the contents of the upload page in some divs so that it appears
+    centered on the page.
+    """
+    return html.Div(
+        children=[
+            empty_col(),
+            html.Div(
+                children=[
+                    upload_component()
+                ],
+                className="col"
+            ),
+            empty_col(),
+        ],
+        className="row mt-5"
+    )
+
+def upload_component():
+    """
+    The actual contents of the upload page.
+    """
     return html.Div(
         [
             html.H2("Upload"),
@@ -99,14 +121,18 @@ def upload():
                 },
                 multiple=True,
             ),
-            html.H2("File List"),
+            html.H2(
+                "Uploaded Files:",
+                className="mt-4"
+            ),
             html.Ul(id="file-list"),
             html.A(
                 html.Button(
                     "Continue",
-                    className="btn btn-success",
+                    className="btn btn-success mt-4 text-center",
                 ),
                 href="seesegment",
+                className="text-center",
             ),
         ],
         style={"max-width": "500px"},
