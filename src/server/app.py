@@ -24,9 +24,7 @@ uploaded should be used in the segmentation process.
 
 Add a better way of managing promises from the work queue than the results list.
 
-Add a better way of managing individuals and their fitnesses. It would be nice to
-have an organized means of keeping track of all the best individuals rather than only
-the current best individual.
+Add a better way of managing individuals and their fitnesses.
 
 Rewrite the task conduct genetic search to create subtasks where the subtasks 
 calculate the segmentations and the fitnesses. 
@@ -84,7 +82,8 @@ app = dash.Dash(server=server,
                     {"name": "viewport", "content": "width=device-width, initial-scale=1, shrink-to-fit=no"}
                 ],
                 external_scripts=external_scripts,
-                external_stylesheets=external_stylesheets)
+                external_stylesheets=external_stylesheets,
+                suppress_callback_exceptions=True)
 
 app.layout = html.Div(
     children=[
@@ -103,21 +102,93 @@ app.layout = html.Div(
     [Input("interval-component", "n_intervals")],
     [State("mask_image", "src")]
 )
-def periodic_update(n_intevals, source):
-    if len(results) > 0:
-        images = uploaded_files()
+def periodic_update(n_intevals, src):
+    if update_best_individual():
         img = "Chameleon.jpg"
-        if results[0].ready():
-            segmenter = Segmentors.algoFromParams((results[0].get())["params"])
-            mask_image_path = tasks.evaluate_segmentation.delay(segmenter, img).get()
-    return "/static/" + "mask.jpg"
+        segmenter = Segmentors.algoFromParams((results[0].get())["params"])
+        return "/static/" + tasks.evaluate_segmentation.delay(segmenter, img).get()
+    return src
+
+
+def update_best_individual():
+    """
+    this function checks all the promises in the global results variable
+    every promise that is ready is then checked to see if it contains 
+    """
+    update_occured = False
+    global best_fit
+    global best_ind
+    # Note results accumulate in results so it will take longer and longer to search
+    for result in results:
+        if result.ready():
+            data = result.get()
+            # since a lower fitness value is better
+            if best_fit == -1 or best_ind["fitness"] > data["fitness"]:
+                best_ind = data
+                best_fit = best_ind["fitness"]
+                update_occured = True
+    return update_occured
+
+def has_results():
+    """
+    This function returns true if any genetic searches have returned results.
+    """
+    return best_fit != -1
 
 @app.callback(
     Output("best-segmentation-code", "children"),
-    [Input("interval-component", "n_intervals")]
+    [Input("interval-component", "n_intervals")],
+    [State("best-segmentation-code", "children")]
 )
-def update_code_display():
-    return get_best_info()
+def update_code_display(n_intevals, currently_displayed_code):
+    if has_results():
+        return GeneticSearch.print_best_algorithm_code(best_ind["params"])
+    else:
+        return currently_displayed_code
+
+
+@app.callback(
+    Output("best-segmentation-params", "children"),
+    [Input("interval-component", "n_intervals")],
+    [State("best-segmentation-params", "children")]
+)
+def update_params_display(n_intevals, currently_displayed_params):
+    if has_results():
+        return str(best_ind["params"])
+    else:
+        return currently_displayed_params
+
+
+def formatted_fitness(fitness):
+    return float("{0:.2f}".format(fitness))
+
+def fitness_to_progress(fitness):
+    # Calculate progress bar precentage
+    return (1 - fitness) * 100
+
+@app.callback(
+    Output("best-segmentation-fitness", "children"),
+    [Input("interval-component", "n_intervals")],
+    [State("best-segmentation-fitness", "children")]
+)
+def update_fitness_display(n_intevals, currently_displayed_fitness):
+    
+    if has_results():
+        return "Fitness: " + str(formatted_fitness(best_ind["fitness"]))
+    else:
+        return currently_displayed_fitness
+
+@app.callback(
+    Output("best-segmentation-fitness-bar", "style"),
+    [Input("interval-component", "n_intervals")],
+    [State("best-segmentation-fitness-bar", "style")]
+)
+def update_fitness_bar(n_intevals, currently_displayed_fitness):
+    
+    if has_results():
+        return {"width": str(fitness_to_progress(best_ind["fitness"]))+"%"}
+    else:
+        return currently_displayed_fitness
 
 
 def get_best_segmentation_info():

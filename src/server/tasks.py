@@ -98,9 +98,9 @@ def conduct_genetic_search(img, gmask, num_gen, pop_size):
         fitness = Segmentors.FitnessFunction(mask, gmask)[0]
         params = my_evolver.hof[0]
 
-        # Combine data into a single object
-        data = {}
-        data["fitness"] = fitness
-        data["params"] = params
+    # Combine data into a single object
+    data = {}
+    data["fitness"] = fitness
+    data["params"] = params
 
-        return data
+    return data

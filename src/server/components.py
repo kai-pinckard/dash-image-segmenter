@@ -251,7 +251,10 @@ def display_segmentation_code(segmentation_code="Please wait.", fitness=1.0, seg
             ),
             html.Div(
                 children=[
-                    html.H2("Fitness: " + str(formatted_fitness(fitness))),
+                    html.H2(
+                        "Fitness: " + str(formatted_fitness(fitness)),
+                        id="best-segmentation-fitness",
+                        ),
                     html.Div(
                         children=[
                             html.Div(
@@ -260,7 +263,10 @@ def display_segmentation_code(segmentation_code="Please wait.", fitness=1.0, seg
                                         className="progress-bar bg-success",
                                         role="progressbar",
                                         style={
-                                            "width": str(fitness_to_progress(fitness))+"%"},
+                                            "width": str(fitness_to_progress(fitness))+"%"
+                                            },
+                                        id="best-segmentation-fitness-bar",
+
                                     ),
                                 ],
                                 className="progress",
@@ -273,7 +279,10 @@ def display_segmentation_code(segmentation_code="Please wait.", fitness=1.0, seg
                             ),
                     html.Div(
                         children=[
-                            html.P(segmentation_parameters)
+                            html.P(
+                                segmentation_parameters,
+                                id="best-segmentation-params",
+                                ),
                         ],
                         className="card border rounded",
                     )
