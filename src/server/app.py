@@ -238,7 +238,7 @@ def update_page(pathname):
     elif pathname == "/segment":
         return manual_segmentation_page()
     elif pathname == "/seesegment":
-        return see_segment("code", 0.5, "test parameters")
+        return see_segment("Please wait for segmentation results.", 1.0, "Please wait for segmentation results.")
     return html.Div([
         html.Div("Invalid url"),
         html.H3('You are on page {}'.format(pathname))

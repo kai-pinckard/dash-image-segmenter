@@ -22,7 +22,7 @@ def nav_bar():
                                     children=[
                                         html.A("Upload Files",
                                                className="nav-link",
-                                               href="index",
+                                               href="/",
                                                )
                                     ],
                                     className="nav-item",
@@ -31,7 +31,7 @@ def nav_bar():
                                     children=[
                                         html.A("Results",
                                                className="nav-link",
-                                               href="monitor",
+                                               href="seesegment",
                                                )
                                     ],
                                     className="nav-item",
@@ -101,6 +101,13 @@ def upload():
             ),
             html.H2("File List"),
             html.Ul(id="file-list"),
+            html.A(
+                html.Button(
+                    "Continue",
+                    className="btn btn-success",
+                ),
+                href="seesegment",
+            ),
         ],
         style={"max-width": "500px"},
     )
@@ -159,9 +166,18 @@ def see_segment(segmentation_code, fitness, segmentation_parameters):
                 children=[
                     html.Div(className="col"),
                     html.Div(children=[
-                        html.Button("Begin Segmentation",
-                                    className="btn btn-success",
-                                    id="segmentation-button")
+                        html.A(
+                            html.Button(
+                                "Back",
+                                className="btn btn-success mr-1",
+                            ),
+                            href="/",
+                        ),
+                        html.Button(
+                            "Begin Segmentation",
+                            className="btn btn-success",
+                            id="segmentation-button"
+                            ),
                     ],
                         className="col text-center"),
                     html.Div(className="col")
