@@ -23,16 +23,25 @@ This project encapsulates the see-segment tool into Docker containers which allo
 
 ### Activate the virtual environment:
 
+
 `source env/bin/activate`
 
 ### Install the projects dependencies:
 
 `pip install -r requirements.txt`
 
+### Install RabbitMQ:
+`sudo apt-get install rabbitmq-server`
+
 ## How to Run Image Segmenter Finder Locally:
 Make sure that your working directory is the server folder inside the dash-image-segmenter folder. Then run:
 
 `python app.py`
+
+Run the following command in as many terminals tabs as you want to have workers.
+
+
+`celery -A tasks worker --loglevel=info`
 
 
 
