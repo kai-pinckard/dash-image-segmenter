@@ -14,7 +14,10 @@ import imageio
 from PIL import Image
 from see import Segmentors, GeneticSearch
 
+
 import tasks
+
+import sys, getopt
 
 """
 Suggested improvements:
@@ -31,6 +34,31 @@ calculate the segmentations and the fitnesses.
 
 Add multiimage fitness function and task.
 """
+
+#=====================================================================
+# Handle command line arguments
+try:
+    opts, args = getopt.getopt(sys.argv[1:], "p:g:l:hs")
+except getopt.GetoptError:
+    print("For help run:")
+    print("python app.py -h")
+    sys.exit(2)
+for opt, arg in opts:
+    if opt == "-h":
+        print("flags:")
+        print("l: Location")
+        print("To run in a kubernetes cluster run:")
+        print("python app.py -l cluster")
+        print("To run locally run:")
+        print("python app.py")
+        sys.exit()
+    elif opt == "-l":
+        if arg == "cluster":
+            tasks.DASH_URL = "http://serverservice"
+print("Running with parameters:")
+print("DASH_URL =", tasks.DASH_URL)
+print("")
+#=====================================================================
 
 """
 This is a list storing all the promises from the work queue
