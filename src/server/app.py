@@ -38,7 +38,7 @@ Add multiimage fitness function and task.
 #=====================================================================
 # Handle command line arguments
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "p:g:l:hs")
+    opts, args = getopt.getopt(sys.argv[1:], "l:")
 except getopt.GetoptError:
     print("For help run:")
     print("python app.py -h")
