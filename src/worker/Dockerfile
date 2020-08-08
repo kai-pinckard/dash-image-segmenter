@@ -1,11 +1,17 @@
-FROM python:3.8.3
+From python:3.8.3
 
 RUN apt-get update && apt-get install -y git
-RUN pip install numpy scikit-image argparse deap opencv-python scoop requests
-
 WORKDIR = /usr/src/
+COPY requirements.txt ./requirements.txt
+RUN pip install -r ./requirements.txt
 RUN git clone https://github.com/colbrydi/see-segment
 RUN mv ./see-segment/see ./see
-COPY segment_container.py ./segment_container.py
+COPY app.py ./app.py
+COPY components.py ./components.py
+COPY tasks.py ./tasks.py
 
-ENTRYPOINT ["python", "segment_container.py", "-l", "cluster"]
+RUN export C_FORCE_ROOT=true
+
+EXPOSE 8888
+
+ENTRYPOINT ["celery", "-A", "tasks", "worker", "--loglevel=info"]
